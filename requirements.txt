@@ -1,0 +1,3 @@
+# lidarr-bulk-adder/requirements.txt
+Flask>=2.0
+requests>=2.20
