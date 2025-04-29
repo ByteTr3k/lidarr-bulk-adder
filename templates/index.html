@@ -1,69 +1,103 @@
-<!doctype html>
-<html lang="en" data-bs-theme="dark">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Lidarr Bulk Artist Adder</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png"> <style>
-      body { padding-top: 60px; display: flex; flex-direction: column; min-height: 100vh; } /* Adjust for fixed navbar and push footer */
-      .container { max-width: 800px; flex-grow: 1; } /* Allow container to grow */
-      textarea { min-height: 150px; font-family: monospace; }
-      .result-summary { margin-top: 1rem; }
-      footer { flex-shrink: 0; } /* Prevent footer from shrinking */
-    </style>
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Lidarr Bulk Adder</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="{{ url_for('index') }}">Add Artists</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('settings') }}">Settings</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+<!DOCTYPE html>
+ <html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lidarr Bulk Adder</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  body {
+   background-color: #222;
+   color: #fff;
+  }
+  .container {
+   background-color: #333;
+   padding: 20px;
+   border-radius: 10px;
+   margin-top: 20px;
+  }
+  .form-group {
+   margin-bottom: 15px;
+  }
+  .btn-primary {
+   background-color: #007bff;
+   border-color: #007bff;
+  }
+  .btn-primary:hover {
+   background-color: #0056b3;
+   border-color: #0056b3;
+  }
+  .progress {
+   background-color: #444;
+   border-radius: 4px;
+   height: 20px;
+   margin-bottom: 15px;
+   overflow: hidden;
+  }
+  .progress-bar {
+   background-color: #007bff;
+   height: 20px;
+   width: 0%;
+   transition: width 0.2s ease-in-out;
+  }
+  #progress-container {
+   display: none; /* Initially hide the progress bar */
+  }
+  </style>
+ </head>
+ <body>
+  <div class="container">
+  <h1 class="mb-4">Lidarr Bulk Adder (v{{ app_version }})</h1>
+ 
 
-    <div class="container mt-5 mb-5"> <h1>Add Artists to Lidarr</h1>
-      <hr>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+ 
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+  <form id="add-artists-form" action="/add" method="post" enctype="multipart/form-data">
+  <div class="form-group">
+   <label for="artist_list_paste" class="form-label">Paste Artist List (One per line):</label>
+   <textarea class="form-control" id="artist_list_paste" name="artist_list_paste" rows="5"></textarea>
+  </div>
+  <div class="form-group">
+   <label for="artist_list_file" class="form-label">Or Upload a .txt File:</label>
+   <input type="file" class="form-control" id="artist_list_file" name="artist_list_file">
+  </div>
+  <button type="submit" class="btn btn-primary">Add Artists</button>
+  </form>
+ 
 
-      <form action="{{ url_for('add_artists_route') }}" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label for="artistListPaste" class="form-label">Paste Artist List (one per line):</label>
-          <textarea class="form-control" id="artistListPaste" name="artist_list_paste" rows="8"></textarea>
-        </div>
+  <div id="progress-container" style="display: none;">
+  <div class="progress">
+   <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+  </div>
+  <p id="progress-text">Processing... 0%</p>
+  </div>
+ 
 
-        <div class="mb-3">
-          <label for="artistListFile" class="form-label">Or Upload Artist List ('.txt' file, one per line):</label>
-          <input class="form-control" type="file" id="artistListFile" name="artist_list_file" accept=".txt">
-        </div>
+  <a href="/settings" class="btn btn-secondary mt-3">Settings</a>
+  </div>
+ 
 
-        <button type="submit" class="btn btn-primary">Add Artists</button>
-      </form>
+  <script>
+  document.getElementById('add-artists-form').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent the default form submission
+ 
 
-    </div> <footer class="mt-auto pt-4 pb-4 text-center text-muted border-top bg-dark"> <div class="container"> Lidarr Bulk Adder v{{ app_version }} - Created by <a href="https://ByteTrek.me" target="_blank" rel="noopener noreferrer">ByteTrek</a> (ByteTrek.me)
-      </div>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  </body>
-</html>
+  const form = event.target;
+  const formData = new FormData(form);
+ 
+
+  // Show the progress bar
+  document.getElementById('progress-container').style.display = 'block';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-text').textContent = 'Processing... 0%';
+ 
+
+  fetch('/add', {
+   method
