@@ -3,6 +3,7 @@ import requests
 import json
 import time
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from datetime import datetime  # Import the datetime module
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -27,7 +28,7 @@ def load_config():
         except json.JSONDecodeError:
             print(f"Warning: Could not decode {CONFIG_FILE}. Using defaults/environment variables.")
         except Exception as e:
-             print(f"Warning: Error reading {CONFIG_FILE}: {e}. Using defaults/environment variables.")
+            print(f"Warning: Error reading {CONFIG_FILE}: {e}. Using defaults/environment variables.")
 
     config['LIDARR_URL'] = os.environ.get('LIDARR_URL', config.get('LIDARR_URL', ''))
     config['API_KEY'] = os.environ.get('LIDARR_API_KEY', config.get('API_KEY', ''))
@@ -56,7 +57,7 @@ def search_and_add_artist(artist_name, config):
     if not config.get('LIDARR_URL') or not config.get('API_KEY'):
         return {"status": "error", "message": "Lidarr URL or API Key not configured."}
     if not config.get('ROOT_FOLDER_PATH'):
-         return {"status": "error", "message": "Root Folder Path not configured."}
+        return {"status": "error", "message": "Root Folder Path not configured."}
 
     print(f"🔍 Searching for artist: {artist_name}")
     search_term_encoded = requests.utils.quote(artist_name)
@@ -77,8 +78,8 @@ def search_and_add_artist(artist_name, config):
         actual_artist_name = artist_to_add.get("artistName")
 
         if not artist_id or not actual_artist_name:
-             print(f"❌ API response missing data for: {artist_name}")
-             return {"status": "error", "message": f"API response missing data for: {artist_name}"}
+            print(f"❌ API response missing data for: {artist_name}")
+            return {"status": "error", "message": f"API response missing data for: {artist_name}"}
 
         existing_artist_url = f"{config['LIDARR_URL']}/api/v1/artist"
         existing_response = requests.get(existing_artist_url, headers=headers, timeout=15)
@@ -132,8 +133,9 @@ def index():
     config = load_config()
     status_message = None
     if not config.get('LIDARR_URL') or not config.get('API_KEY'):
-        status_message = 'Lidarr URL or API Key is not configured. Please configure them in Settings.'
-    return render_template('index.html', config=config, app_version=APP_VERSION, status_message=status_message)
+        flash('Lidarr URL or API Key is not configured. Please configure them in Settings.', 'warning')
+    now = datetime.now()  # Get the current date and time
+    return render_template('index.html', config=config, app_version=APP_VERSION, now=now)  # Pass 'now' to the template
 
 @app.route('/add', methods=['POST'])
 def add_artists_route():
@@ -218,7 +220,8 @@ def settings():
             flash('Error saving settings. Check container logs.', 'danger')
         return redirect(url_for('settings'))
 
-    return render_template('settings.html', config=config, app_version=APP_VERSION)
+    now = datetime.now()  # Get the current date and time
+    return render_template('settings.html', config=config, app_version=APP_VERSION, now=now)  # Pass 'now' to the template
 
 # --- Main Execution ---
 if __name__ == "__main__":
