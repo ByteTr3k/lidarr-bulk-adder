@@ -25,6 +25,7 @@ Choose **one** method below based on how you want to handle configuration persis
 
 ```bash
 docker run -d \
-  --name lidarr-bulk-adder-app \
+  --name lidarr-bulk-adder \
   -p 5050:5000 \
+  -v lidarr-bulk-adder-config:/app \
   bytetrek/lidarr-bulk-adder:latest # Or use specific version e.g., :v0.1.0
