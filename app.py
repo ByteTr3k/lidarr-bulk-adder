@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # --- Define Application Version ---
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.1.1"
 # ---
 
 CONFIG_FILE = 'config.json'
@@ -19,7 +19,8 @@ def load_config():
     config = {
         'LIDARR_URL': '',
         'API_KEY': '',
-        'ROOT_FOLDER_PATH': '/music'
+        'ROOT_FOLDER_PATH': '/music',
+        'DEFAULT_QUALITY_PROFILE_ID': 1  # Default to the first profile if not set
     }
     if os.path.exists(CONFIG_FILE):
         try:
@@ -33,6 +34,7 @@ def load_config():
     config['LIDARR_URL'] = os.environ.get('LIDARR_URL', config.get('LIDARR_URL', ''))
     config['API_KEY'] = os.environ.get('LIDARR_API_KEY', config.get('API_KEY', ''))
     config['ROOT_FOLDER_PATH'] = os.environ.get('LIDARR_ROOT_FOLDER', config.get('ROOT_FOLDER_PATH', '/music'))
+    config['DEFAULT_QUALITY_PROFILE_ID'] = os.environ.get('LIDARR_DEFAULT_QUALITY_PROFILE_ID', config.get('DEFAULT_QUALITY_PROFILE_ID', 1))
 
     if config['LIDARR_URL']:
         config['LIDARR_URL'] = config['LIDARR_URL'].rstrip('/')
@@ -43,7 +45,8 @@ def save_config(config_data):
         save_data = {
             'LIDARR_URL': config_data.get('LIDARR_URL', '').rstrip('/'),
             'API_KEY': config_data.get('API_KEY', ''),
-            'ROOT_FOLDER_PATH': config_data.get('ROOT_FOLDER_PATH', '/music')
+            'ROOT_FOLDER_PATH': config_data.get('ROOT_FOLDER_PATH', '/music'),
+            'DEFAULT_QUALITY_PROFILE_ID': config_data.get('DEFAULT_QUALITY_PROFILE_ID', 1)
         }
         with open(CONFIG_FILE, 'w') as f:
             json.dump(save_data, f, indent=4)
@@ -53,6 +56,20 @@ def save_config(config_data):
         return False
 
 # --- Lidarr API Logic ---
+def get_lidarr_quality_profiles(config):
+    if not config.get('LIDARR_URL') or not config.get('API_KEY'):
+        return None
+    headers = {"X-Api-Key": config['API_KEY']}
+    quality_profile_url = f"{config['LIDARR_URL']}/api/v1/qualityprofile"
+    try:
+        response = requests.get(quality_profile_url, headers=headers, timeout=10)
+        response.raise_for_status()
+        profiles = response.json()
+        return [{"id": p['id'], "name": p['name']} for p in profiles]
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching Lidarr quality profiles: {e}")
+        return None
+
 def search_and_add_artist(artist_name, config):
     if not config.get('LIDARR_URL') or not config.get('API_KEY'):
         return {"status": "error", "message": "Lidarr URL or API Key not configured."}
@@ -94,7 +111,7 @@ def search_and_add_artist(artist_name, config):
         body = {
             "foreignArtistId": artist_id,
             "metadataProfileId": 1,
-            "qualityProfileId": 1,
+            "qualityProfileId": config['DEFAULT_QUALITY_PROFILE_ID'],  # Use the configured quality profile ID
             "monitored": True,
             "artistName": actual_artist_name,
             "rootFolderPath": config['ROOT_FOLDER_PATH'],
@@ -108,7 +125,7 @@ def search_and_add_artist(artist_name, config):
         add_response = requests.post(add_artist_url, headers=add_headers, data=json.dumps(body), timeout=30)
         add_response.raise_for_status()
 
-        print(f"✅ Added: {actual_artist_name}")
+        print(f"✅ Added: {actual_artist_name} with Quality Profile ID: {config['DEFAULT_QUALITY_PROFILE_ID']}")
         return {"status": "added", "artist": actual_artist_name}
 
     except requests.exceptions.Timeout:
@@ -153,9 +170,9 @@ def add_artists_route():
             except Exception as e:
                 return jsonify({"status": "error", "message": f"Error reading uploaded file: {e}"}), 400
         elif not artists_input:
-             return jsonify({"status": "error", "message": "Please paste a list of artists or upload a file."}), 400
+            return jsonify({"status": "error", "message": "Please paste a list of artists or upload a file."}), 400
     else:
-         return jsonify({"status": "error", "message": "No artist data provided."}), 400
+        return jsonify({"status": "error", "message": "No artist data provided."}), 400
 
     artists = [artist.strip() for artist in artists_input.splitlines() if artist.strip()]
 
@@ -203,16 +220,18 @@ def add_artists_route():
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     config = load_config()
+    quality_profiles = get_lidarr_quality_profiles(config)
 
     if request.method == 'POST':
         new_config = config.copy()
         new_config['LIDARR_URL'] = request.form.get('lidarr_url', '').strip().rstrip('/')
         new_config['API_KEY'] = request.form.get('api_key', '').strip()
         new_config['ROOT_FOLDER_PATH'] = request.form.get('root_folder_path', '').strip()
+        new_config['DEFAULT_QUALITY_PROFILE_ID'] = int(request.form.get('default_quality_profile_id', 1))
 
         if not new_config['LIDARR_URL'] or not new_config['API_KEY'] or not new_config['ROOT_FOLDER_PATH']:
-             flash('Lidarr URL, API Key, and Root Folder Path cannot be empty.', 'danger')
-             return render_template('settings.html', config=new_config, app_version=APP_VERSION)
+            flash('Lidarr URL, API Key, and Root Folder Path cannot be empty.', 'danger')
+            return render_template('settings.html', config=new_config, app_version=APP_VERSION, quality_profiles=quality_profiles)
 
         if save_config(new_config):
             flash('Settings saved successfully!', 'success')
@@ -220,8 +239,8 @@ def settings():
             flash('Error saving settings. Check container logs.', 'danger')
         return redirect(url_for('settings'))
 
-    now = datetime.now()  # Get the current date and time
-    return render_template('settings.html', config=config, app_version=APP_VERSION, now=now)  # Pass 'now' to the template
+    now = datetime.now()
+    return render_template('settings.html', config=config, app_version=APP_VERSION, quality_profiles=quality_profiles, now=now)
 
 # --- Main Execution ---
 if __name__ == "__main__":

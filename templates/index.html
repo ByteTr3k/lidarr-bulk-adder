@@ -89,7 +89,6 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="navbar-brand-logo">
                 Lidarr Bulk Adder
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -159,7 +158,7 @@
 
     <footer class="mt-auto pt-4 pb-4 text-center text-muted border-top bg-dark">
         <div class="container">
-            Lidarr Bulk Adder v{{ app_version }} - Copyright © {{ now.year }} ByteTrek - ByteTrek.me
+            Lidarr Bulk Adder v{{ app_version }} - Copyright © {{ now.year }} ByteTrek - <a href="https://bytetrek.me" target="_blank" rel="noopener noreferrer">ByteTrek.me</a>
         </div>
     </footer>
     <script>
