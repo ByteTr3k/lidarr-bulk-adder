@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # --- Define Application Version ---
-APP_VERSION = "0.1.1"
+APP_VERSION = "0.2.0"
 # ---
 
 CONFIG_FILE = 'config.json'

@@ -1,73 +1,105 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Settings - Lidarr Bulk Adder</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png"> <style>
-      body { padding-top: 60px; display: flex; flex-direction: column; min-height: 100vh; } /* Adjust for fixed navbar and push footer */
-      .container { max-width: 700px; flex-grow: 1; } /* Allow container to grow */
-      footer { flex-shrink: 0; } /* Prevent footer from shrinking */
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    <style>
+        body {
+            padding-top: 60px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            flex-grow: 1;
+        }
+
+        footer {
+            flex-shrink: 0;
+        }
     </style>
-  </head>
-  <body>
-     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Lidarr Bulk Adder</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('index') }}">Add Artists</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="{{ url_for('settings') }}">Settings</a>
-            </li>
-          </ul>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Lidarr Bulk Adder</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Add Artists</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('settings') }}">Settings</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </div>
     </nav>
 
-    <div class="container mt-5 mb-5"> <h1>Settings</h1>
-      <p>Configure your Lidarr connection details. Settings are saved in <code>config.json</code> (location depends on how container is run).</p> <hr>
+    <div class="container mt-5 mb-5">
+        <h1>Settings</h1>
+        <p>Configure your Lidarr connection details. Settings are saved in <code>config.json</code> (location depends on
+            how container is run).</p>
+        <hr>
 
-       {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
         {% endif %}
-      {% endwith %}
+        {% endwith %}
 
-      <form action="{{ url_for('settings') }}" method="post">
-        <div class="mb-3">
-          <label for="lidarrUrl" class="form-label">Lidarr URL</label>
-          <input type="url" class="form-control" id="lidarrUrl" name="lidarr_url" placeholder="http://192.168.1.100:8686" value="{{ config.LIDARR_URL or '' }}" required>
-           <div class="form-text">Your Lidarr instance URL (e.g., http://lidarr.local:8686 or http://192.168.x.x:8686).</div>
-        </div>
-        <div class="mb-3">
-          <label for="apiKey" class="form-label">Lidarr API Key</label>
-          <input type="password" class="form-control" id="apiKey" name="api_key" value="{{ config.API_KEY or '' }}" required>
-           <div class="form-text">Find this in Lidarr under Settings > General > Security.</div>
-        </div>
-         <div class="mb-3">
-          <label for="rootFolderPath" class="form-label">Lidarr Root Folder Path</label>
-          <input type="text" class="form-control" id="rootFolderPath" name="root_folder_path" placeholder="/music" value="{{ config.ROOT_FOLDER_PATH or '/music' }}" required>
-           <div class="form-text">The root folder configured *within Lidarr* where music should be stored (e.g., <code>/music</code>, <code>/data/media/music</code>). This must match exactly what Lidarr expects.</div>
-        </div>
+        <form action="{{ url_for('settings') }}" method="post">
+            <div class="mb-3">
+                <label for="lidarrUrl" class="form-label">Lidarr URL</label>
+                <input type="url" class="form-control" id="lidarrUrl" name="lidarr_url"
+                    placeholder="http://192.168.1.100:8686" value="{{ config.LIDARR_URL or '' }}" required>
+                <div class="form-text">Your Lidarr instance URL (e.g., http://lidarr.local:8686 or
+                    http://192.168.x.x:8686).</div>
+            </div>
+            <div class="mb-3">
+                <label for="apiKey" class="form-label">Lidarr API Key</label>
+                <input type="password" class="form-control" id="apiKey" name="api_key" value="{{ config.API_KEY or '' }}"
+                    required>
+                <div class="form-text">Find this in Lidarr under Settings &gt; General &gt; Security.</div>
+            </div>
+            <div class="mb-3">
+                <label for="rootFolderPath" class="form-label">Lidarr Root Folder Path</label>
+                <input type="text" class="form-control" id="rootFolderPath" name="root_folder_path" placeholder="/music"
+                    value="{{ config.ROOT_FOLDER_PATH or '/music' }}" required>
+                <div class="form-text">The root folder configured *within Lidarr* where music should be stored (e.g.,
+                    <code>/music</code>, <code>/data/media/music</code>). This must match exactly what Lidarr expects.</div>
+            </div>
 
-        <button type="submit" class="btn btn-success">Save Settings</button>
-      </form>
+            <button type="submit" class="btn btn-success">Save Settings</button>
+        </form>
 
-    </div> <footer class="mt-auto pt-4 pb-4 text-center text-muted border-top bg-dark"> <div class="container"> Lidarr Bulk Adder v{{ app_version }} - Created by <a href="https://ByteTrek.me" target="_blank" rel="noopener noreferrer">ByteTrek</a> (ByteTrek.me)
-       </div>
+    </div>
+
+    <footer class="mt-auto pt-4 pb-4 text-center text-muted border-top bg-dark">
+        <div class="container">
+            Lidarr Bulk Adder v{{ app_version }} - Copyright © {{ now.year }} ByteTrek - ByteTrek.me
+        </div>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  </body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
 </html>

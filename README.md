@@ -7,7 +7,6 @@
 * **Web Interface:** Easy-to-use UI accessible from your browser.
 * **Bulk Add:** Add multiple artists by pasting a list (one artist per line) or uploading a `.txt` file.
 * **Configuration UI:** Set your Lidarr URL, API Key, and Root Folder Path via a simple settings page.
-* **Persistent Settings:** Configuration *can be made* persistent using Docker volumes or bind mounts (see Configuration Notes).
 * **Dockerized:** Runs as a lightweight Docker container, suitable for NAS devices (like Synology) or any Docker host.
 * **Dark Mode:** Easy on the eyes!
 
